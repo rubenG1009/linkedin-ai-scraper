@@ -1,0 +1,10 @@
+# Set environment variables
+DB_NAME=my_project
+DB_USER=postgres
+DB_PASSWORD=test
+DB_HOST=localhost
+DB_PORT=5432
+PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/Users/rubeng/Documents/Proyectos/SQL + Linkdlin/venv/bin
+
+# Run every minute (for testing)
+* * * * * bash /Users/rubeng/Documents/Proyectos/SQL + Linkdlin/test_script.sh >> /Users/rubeng/Documents/Proyectos/SQL + Linkdlin/cron.log 2>&1

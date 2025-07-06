@@ -1,0 +1,59 @@
+# Environment variables & Credentials
+.env
+gcp-linkedin-agent-credentials.json
+google_application
+
+# Binaries, Logs, & Temporary Files
+chromedriver
+chromedriver-mac-arm64/
+*.png
+*.log
+*.html
+*.csv
+*.save
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+venv/
+env/
+
+# macOS specific
+.DS_Store
+
+# Test files
+test.txt
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Database
+*.db
