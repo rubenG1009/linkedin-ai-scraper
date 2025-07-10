@@ -55,30 +55,18 @@ LINKEDIN_PASSWORD="your-linkedin-password"
 
 ## How to Run the Agent
 
-Once all setup steps are complete, you can run the agent from your terminal.
+Once all setup steps are complete, you can run the agent with a single command from your terminal.
 
-The script requires the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to be set for authentication.
-
+Make sure you have activated your virtual environment first:
 ```bash
-GOOGLE_APPLICATION_CREDENTIALS="./gcp-linkedin-agent-credentials.json" python3 run_agent.py
+source venv/bin/activate
+```
+
+Then, simply execute the run script:
+```bash
+./run.sh
 ```
 
 The agent will then connect to the database, retrieve its mission, and begin the scrape-analyze-save workflow.
 
-This project implements a database-driven scheduler for LinkedIn recruiter searches.
 
-## Setup
-
-1. Install PostgreSQL (via Docker)
-2. Create a database named `agent_db` or `myapp_db`
-3. Create the `job_schedules` table
-4. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Project Structure
-
-- `repository.py`: Contains database interaction logic
-- `requirements.txt`: Python dependencies
-- `README.md`: Project documentation

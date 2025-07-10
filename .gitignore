@@ -21,8 +21,9 @@ env/
 # macOS specific
 .DS_Store
 
-# Test files
+# Test files & scripts
 test.txt
+test_*.py
 __pycache__/
 *.py[cod]
 *$py.class

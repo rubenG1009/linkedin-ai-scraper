@@ -16,11 +16,19 @@ LINKEDIN_USERNAME = os.getenv("LINKEDIN_USERNAME")
 LINKEDIN_PASSWORD = os.getenv("LINKEDIN_PASSWORD")
 
 def setup_driver():
-    """Sets up and returns a Selenium WebDriver instance."""
+    """Sets up a robust Chrome driver for Selenium with stability options."""
     print("Setting up Chrome driver...")
     # This uses the local chromedriver you downloaded
     service = webdriver.chrome.service.Service(executable_path="./chromedriver")
     options = webdriver.ChromeOptions()
+    # --- Stability Options ---
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--start-maximized')
+    # Optional: To run headless (without a visible browser window)
+    # options.add_argument('--headless')
+    
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(5)
     return driver
@@ -29,20 +37,22 @@ def _login_to_linkedin(driver, username, password):
     """(Private) Logs into LinkedIn."""
     print("Navigating to LinkedIn login page...")
     driver.get('https://www.linkedin.com/login')
-    
-    print("Page loaded. Pausing for 15 seconds for manual CAPTCHA...", flush=True)
-    time.sleep(15)
-    print("Pause finished. Attempting to log in...")
+    print("DEBUG: Page navigation initiated. Waiting for page to be fully loaded...")
+    # Explicitly wait for a key element (the username field) to be present after navigation
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.ID, "username"))
+    )
+    print("DEBUG: Page loaded and key element is present.")
+    print("Page loaded and ready. Attempting to log in immediately...")
 
     try:
-        username_field = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "username"))
-        )
-        username_field.send_keys(username)
-        password_field = driver.find_element(By.ID, "password")
-        password_field.send_keys(password)
-        driver.find_element(By.XPATH, "//button[@type='submit']").click()
+        # Use atomic JavaScript calls to find and interact with elements in a single step.
+        # This is the most robust method for unstable environments.
+        driver.execute_script("document.getElementById('username').value = arguments[0];", username)
+        driver.execute_script("document.getElementById('password').value = arguments[0];", password)
+        driver.execute_script("document.querySelector('button[type=\"submit\"]').click();")
 
+        # Wait for a known element on the home page to confirm login
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, "global-nav-typeahead"))
         )
@@ -53,77 +63,68 @@ def _login_to_linkedin(driver, username, password):
         driver.save_screenshot('linkedin_login_error.png')
         return False
 
-def perform_search_and_get_urls(driver, search_query):
-    """
-    Logs in, performs a search, scrolls to load all results, and returns profile URLs.
-    """
-    if not _login_to_linkedin(driver, LINKEDIN_USERNAME, LINKEDIN_PASSWORD):
-        print("Login failed. Aborting search.")
-        return []
-
+def search_for_people(driver, search_query):
+    """Navigates to the search results page for a given query."""
     print(f"\nSearching for people with query: '{search_query}'")
     try:
         encoded_query = quote_plus(search_query)
         people_search_url = f"https://www.linkedin.com/search/results/people/?keywords={encoded_query}"
         driver.get(people_search_url)
-        WebDriverWait(driver, 15).until(EC.url_contains("/people/"))
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'search-results-container')]")))
         print("Successfully loaded 'People' filtered search results.")
+        return True
     except Exception as e:
         print(f"Could not navigate to search results page: {e}")
-        return []
+        return False
 
-    print("Scrolling to load all search results...")
+def extract_urls_from_current_page(driver):
+    """Extracts all unique profile URLs from the currently visible search results page."""
+    print("Extracting profile URLs from current page...")
     try:
-        last_height = driver.execute_script("return document.body.scrollHeight")
-        for _ in range(10): # Limit scrolls to prevent infinite loops
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(3)
-            new_height = driver.execute_script("return document.body.scrollHeight")
-            if new_height == last_height:
-                break
-            last_height = new_height
-        print("Finished scrolling.")
-    except Exception as e:
-        print(f"An error occurred during scrolling: {e}")
+        # Scroll once to ensure all elements on the page are loaded
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2)
 
-    print("Extracting profile URLs...")
-    profile_urls = []
-    try:
-        # Wait for a more stable, general container for the search results.
-        search_container = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'search-results-container')]"))
-        )
-
-        # Find all list items within the container, ignoring specific, volatile class names.
+        # The outer container for search results.
+        search_container = driver.find_element(By.XPATH, "//div[contains(@class, 'search-results-container')]")
+        # Find all list items directly within that container. This is more general and robust.
         profile_elements = search_container.find_elements(By.XPATH, ".//li")
-
-        if not profile_elements:
-            print("Found search container, but no profile list items ('li') were inside. Saving screenshot.")
-            driver.save_screenshot('linkedin_extraction_error.png')
-            return []
-
+        
+        urls = []
         for elem in profile_elements:
             try:
-                # Find the link to the profile within the list item.
                 link_tag = elem.find_element(By.XPATH, ".//a[contains(@href, '/in/')]")
                 url = link_tag.get_attribute('href').split('?')[0]
-                if url not in profile_urls:
-                    profile_urls.append(url)
+                if url not in urls:
+                    urls.append(url)
             except NoSuchElementException:
-                # It's normal for some 'li' elements to not be profiles (e.g., ads), so we just skip them.
                 continue
-
-        print(f"Extracted {len(profile_urls)} unique profile URLs.")
-        return profile_urls
-
-    except TimeoutException:
-        print("Could not find the main search results container. The page structure has likely changed. Saving screenshot.")
-        driver.save_screenshot('linkedin_extraction_error.png')
-        return []
+        
+        print(f"Extracted {len(urls)} unique profile URLs from this page.")
+        return urls
     except Exception as e:
         print(f"An unexpected error occurred during URL extraction: {e}")
         driver.save_screenshot('linkedin_extraction_error.png')
         return []
+
+def click_next_page(driver):
+    """Clicks the 'Next' button on the search results page and returns False if it's the last page."""
+    try:
+        next_button = WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Next']"))
+        )
+        # Scroll to the button to ensure it's in view before clicking
+        driver.execute_script("arguments[0].scrollIntoView(true);", next_button)
+        time.sleep(1)
+        next_button.click()
+        time.sleep(2)  # Wait for the next page to load
+        return True
+    except (TimeoutException, NoSuchElementException):
+        print("INFO: 'Next' button not found. Reached the last page of results.")
+        return False
+    except Exception as e:
+        print(f"An error occurred while trying to click 'Next': {e}")
+        return False
 
 def scrape_full_profile_details(driver, profile_url):
     """Navigates to a profile URL and scrapes its text content."""

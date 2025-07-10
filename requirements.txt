@@ -1,1 +1,7 @@
-SQLAlchemy==2.0.25
+langchain
+langchain-core
+langchain-google-vertexai
+pydantic
+selenium
+python-dotenv
+google-cloud-aiplatform
