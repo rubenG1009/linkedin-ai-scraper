@@ -27,7 +27,7 @@ def setup_driver():
     options.add_argument('--disable-gpu')
     options.add_argument('--start-maximized')
     # Optional: To run headless (without a visible browser window)
-    # options.add_argument('--headless')
+    options.add_argument('--headless')
     
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(5)
