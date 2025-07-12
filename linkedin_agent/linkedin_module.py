@@ -31,23 +31,43 @@ def setup_driver():
     
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(5)
+    # Add a page load timeout to prevent indefinite hangs
+    driver.set_page_load_timeout(30)
     return driver
 
 def _login_to_linkedin(driver, username, password):
-    """(Private) Logs into LinkedIn."""
-    print("Navigating to LinkedIn login page...")
-    driver.get('https://www.linkedin.com/login')
-    print("DEBUG: Page navigation initiated. Waiting for page to be fully loaded...")
-    # Explicitly wait for a key element (the username field) to be present after navigation
-    WebDriverWait(driver, 15).until(
-        EC.presence_of_element_located((By.ID, "username"))
-    )
-    print("DEBUG: Page loaded and key element is present.")
-    print("Page loaded and ready. Attempting to log in immediately...")
+    """(Private) Logs into LinkedIn with robust retry logic for navigation."""
+    login_url = 'https://www.linkedin.com/login'
+    
+    # --- Navigation with Retry Logic ---
+    navigation_successful = False
+    for attempt in range(3):
+        try:
+            print(f"Navigating to LinkedIn login page (Attempt {attempt + 1}/3)...")
+            driver.get(login_url)
+            
+            # Explicitly wait for a key element (the username field) to be present after navigation
+            print("DEBUG: Page navigation initiated. Waiting for page to be fully loaded...")
+            WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.ID, "username"))
+            )
+            print("DEBUG: Page loaded and key element is present.")
+            navigation_successful = True
+            break # If successful, exit the loop
+            
+        except TimeoutException:
+            print(f"Timeout loading login page on attempt {attempt + 1}. Retrying...")
+        except Exception as e:
+            print(f"An unexpected error occurred during navigation on attempt {attempt + 1}: {e}")
 
+    if not navigation_successful:
+        print("Failed to load login page after multiple attempts. Aborting login.")
+        return False
+
+    # --- Login Credentials Input ---
+    print("Page loaded and ready. Attempting to log in immediately...")
     try:
         # Use atomic JavaScript calls to find and interact with elements in a single step.
-        # This is the most robust method for unstable environments.
         driver.execute_script("document.getElementById('username').value = arguments[0];", username)
         driver.execute_script("document.getElementById('password').value = arguments[0];", password)
         driver.execute_script("document.querySelector('button[type=\"submit\"]').click();")
