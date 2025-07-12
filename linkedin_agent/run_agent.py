@@ -12,10 +12,10 @@ from langchain_google_vertexai import ChatVertexAI
 # 1. From your database repository file
 import time
 from datetime import datetime
-from repository import get_job_schedule, save_recruiter_analysis, profile_url_exists, get_high_scoring_examples
+from .repository import get_job_schedule, save_recruiter_analysis, profile_url_exists, get_high_scoring_examples
 
 # 2. From your Selenium automation file
-from linkedin_module import (
+from .linkedin_module import (
     setup_driver,
     _login_to_linkedin,
     LINKEDIN_USERNAME,
@@ -134,22 +134,20 @@ def analyze_profile_with_langchain(profile_text: str, mcp_data: dict, few_shot_e
 # =============================================================================
 # 3. FINAL, INTEGRATED MAIN WORKFLOW
 # =============================================================================
-def main():
+def main(job_name: str):
     """
     Main function to run a fast, single-session simulation of the agent.
     This version logs in once and processes all profiles in the same browser.
     """
-    JOB_NAME = 'linkedin_recruiter_search'
-    
     # --- Load the Mission from the Database ---
-    print(f"--- Starting Agent Simulation for Job: {JOB_NAME} ---")
-    job_schedule = get_job_schedule(JOB_NAME)
+    print(f"--- Starting Agent Simulation for Job: {job_name} ---")
+    job_schedule = get_job_schedule(job_name)
 
     # --- DEBUG: Print the raw job schedule from the database ---
     print(f"DEBUG: Raw job schedule from DB: {job_schedule}")
 
     if not job_schedule or not job_schedule.get("mission_parameters"):
-        print(f"Could not load job or mission parameters for '{JOB_NAME}'. Exiting.")
+        print(f"Could not load job or mission parameters for '{job_name}'. Exiting.")
         return
 
     # --- Check if the job is actually due to run ---
@@ -157,7 +155,7 @@ def main():
     next_run_ms = int(job_schedule.get('next_run_timestamp_ms') or 0)
 
     if current_time_ms < next_run_ms:
-        print(f"Job '{JOB_NAME}' is not scheduled to run yet. Exiting.")
+        print(f"Job '{job_name}' is not scheduled to run yet. Exiting.")
         return
         
     mcp_data = job_schedule["mission_parameters"]
@@ -267,4 +265,7 @@ def main():
         print("\n--- Agent Simulation Complete ---")
 
 if __name__ == "__main__":
-    main()
+    # This allows the script to be run directly for testing purposes.
+    # The main entry point for the package is now cli.py.
+    # You can specify a default job name for direct execution.
+    main('linkedin_recruiter_search')
