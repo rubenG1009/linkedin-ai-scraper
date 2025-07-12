@@ -1,25 +1,20 @@
 # linkedin_module.py - A refactored, importable module for Selenium tasks
 
-import os
+# linkedin_module.py - A refactored, importable module for Selenium tasks
+
 import time
-from dotenv import load_dotenv
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from urllib.parse import quote_plus
 
-# Load credentials from .env file
-load_dotenv()
-LINKEDIN_USERNAME = os.getenv("LINKEDIN_USERNAME")
-LINKEDIN_PASSWORD = os.getenv("LINKEDIN_PASSWORD")
-
 def setup_driver():
-    """Sets up a robust Chrome driver for Selenium with stability options."""
-    print("Setting up Chrome driver...")
-    # This uses the local chromedriver you downloaded
-    service = webdriver.chrome.service.Service(executable_path="./chromedriver")
+    """Sets up a robust Chrome driver using webdriver-manager for automatic setup."""
+    print("Setting up Chrome driver via webdriver-manager...")
     options = webdriver.ChromeOptions()
     # --- Stability Options ---
     options.add_argument('--no-sandbox')
@@ -29,6 +24,8 @@ def setup_driver():
     # Optional: To run headless (without a visible browser window)
     options.add_argument('--headless')
     
+    # Use webdriver-manager to automatically handle the driver
+    service = ChromeService(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(5)
     # Add a page load timeout to prevent indefinite hangs

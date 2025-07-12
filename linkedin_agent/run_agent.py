@@ -18,13 +18,13 @@ from .repository import get_job_schedule, save_recruiter_analysis, profile_url_e
 from .linkedin_module import (
     setup_driver,
     _login_to_linkedin,
-    LINKEDIN_USERNAME,
-    LINKEDIN_PASSWORD,
     search_for_people,
     extract_urls_from_current_page,
     click_next_page,
     scrape_full_profile_details
 )
+# 3. From our new config module
+from . import config
 
 # =============================================================================
 # 1. DEFINE THE LLM'S OUTPUT DATA STRUCTURE (PYDANTIC MODEL)
@@ -139,6 +139,13 @@ def main(job_name: str):
     Main function to run a fast, single-session simulation of the agent.
     This version logs in once and processes all profiles in the same browser.
     """
+    # --- Load and Validate Configuration ---
+    try:
+        app_config = config.get_checked_config()
+    except ValueError as e:
+        print(f"Configuration Error: {e}")
+        return
+
     # --- Load the Mission from the Database ---
     print(f"--- Starting Agent Simulation for Job: {job_name} ---")
     job_schedule = get_job_schedule(job_name)
@@ -188,7 +195,7 @@ def main(job_name: str):
         return
 
     try:
-        if not _login_to_linkedin(driver, LINKEDIN_USERNAME, LINKEDIN_PASSWORD):
+        if not _login_to_linkedin(driver, app_config['linkedin_username'], app_config['linkedin_password']):
             print("Could not log in. Aborting simulation.")
             return
 

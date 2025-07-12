@@ -6,3 +6,4 @@ selenium==4.21.0
 python-dotenv==1.0.1
 click==8.1.7
 google-cloud-aiplatform
+webdriver-manager==4.0.1

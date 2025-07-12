@@ -1,14 +1,14 @@
 import subprocess
 import json
-import os
 from typing import Optional, Dict, Any
 from datetime import datetime
+from . import config  # Import the centralized config module
 
 def run_psql_command(command: str) -> str:
-    """Run a psql command using credentials from environment variables."""
-    db_user = os.getenv('DB_USER', 'rubeng')
-    db_name = os.getenv('DB_NAME', 'rubeng')
-    db_host = os.getenv('DB_HOST', 'localhost')
+    """Run a psql command using credentials from the centralized config module."""
+    db_user = config.DB_USER
+    db_name = config.DB_NAME
+    db_host = config.DB_HOST
     
     try:
         result = subprocess.run(
