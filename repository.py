@@ -1,13 +1,18 @@
 import subprocess
 import json
+import os
 from typing import Optional, Dict, Any
 from datetime import datetime
 
 def run_psql_command(command: str) -> str:
-    """Run a psql command and return the output."""
+    """Run a psql command using credentials from environment variables."""
+    db_user = os.getenv('DB_USER', 'rubeng')
+    db_name = os.getenv('DB_NAME', 'rubeng')
+    db_host = os.getenv('DB_HOST', 'localhost')
+    
     try:
         result = subprocess.run(
-            ['/opt/homebrew/bin/psql', '-h', 'localhost', '-U', 'rubeng', '-d', 'rubeng', '-At', '-c', command],
+            ['/opt/homebrew/bin/psql', '-h', db_host, '-U', db_user, '-d', db_name, '-At', '-c', command],
             capture_output=True,
             text=True
         )
