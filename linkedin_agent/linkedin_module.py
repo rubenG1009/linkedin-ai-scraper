@@ -1,11 +1,9 @@
 # linkedin_module.py - A refactored, importable module for Selenium tasks
 
-# linkedin_module.py - A refactored, importable module for Selenium tasks
-
 import time
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -13,22 +11,27 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from urllib.parse import quote_plus
 
 def setup_driver():
-    """Sets up a robust Chrome driver using webdriver-manager for automatic setup."""
-    print("Setting up Chrome driver via webdriver-manager...")
+    """Sets up a robust Chrome driver using a manually specified path from an environment variable."""
+    print("--- Setting up Chrome driver from manual path ---")
+    
+    chromedriver_path = os.getenv('CHROMEDRIVER_PATH')
+    if not chromedriver_path or not os.path.exists(chromedriver_path):
+        raise ValueError(
+            "CHROMEDRIVER_PATH environment variable is not set or points to a non-existent file. "
+            "Please set it to the absolute path of your chromedriver executable."
+        )
+
+    print(f"Using chromedriver from: {chromedriver_path}")
     options = webdriver.ChromeOptions()
-    # --- Stability Options ---
+    options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
     options.add_argument('--start-maximized')
-    # Optional: To run headless (without a visible browser window)
-    options.add_argument('--headless')
     
-    # Use webdriver-manager to automatically handle the driver
-    service = ChromeService(ChromeDriverManager().install())
+    service = ChromeService(executable_path=chromedriver_path)
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(5)
-    # Add a page load timeout to prevent indefinite hangs
     driver.set_page_load_timeout(30)
     return driver
 
