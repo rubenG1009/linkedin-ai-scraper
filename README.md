@@ -1,72 +1,81 @@
-# LinkedIn Profile Scraper & AI Analyzer
+# 🤖 LinkedIn AI-Powered Recruitment Agent
 
-This project is an automated agent that scrapes LinkedIn for profiles based on a configurable search query, analyzes their professional details using Google's Gemini LLM via Vertex AI, and saves the structured analysis into a PostgreSQL database.
-
-## Features
-
-- **Automated Scraping:** Uses Selenium to log in to LinkedIn, perform searches, and scrape profile data.
-- **Intelligent Analysis:** Leverages LangChain and Google's Gemini Pro model to analyze scraped text and extract structured information based on a dynamic "Mission Critical Profile" (MCP).
-- **Configurable & Schedulable:** The agent's mission is loaded from a PostgreSQL database, making it easy to configure and schedule via a cronjob.
-- **Resilient by Design:** The main workflow processes each profile in an isolated browser session to ensure stability and prevent crashes during long runs.
-- **Secure:** All credentials and sensitive files are explicitly excluded from the repository via a robust `.gitignore` file.
+**An autonomous agent that finds, analyzes, and scores potential recruitment candidates on LinkedIn using AI.**
 
 ---
 
-## Setup and Installation
+### Overview
 
-**1. Clone the Repository:**
+This project is a sophisticated, AI-driven software agent designed to automate the early stages of the recruitment pipeline. It intelligently searches LinkedIn for profiles matching a specific job query (e.g., "AI Recruiter in Spain"), scrapes the relevant profile data, uses Google's Vertex AI to analyze and score the profile's alignment with the role, and stores the validated candidates in a PostgreSQL database for review.
+
+### ✨ Key Features
+
+- **Autonomous Searching:** Runs automated, targeted searches on LinkedIn.
+- **Intelligent Scraping:** Extracts key information from public LinkedIn profiles.
+- **AI-Powered Analysis:** Leverages Google's Vertex AI for deep profile analysis and scoring.
+- **Data Persistence:** Stores validated and scored candidates in a PostgreSQL database.
+- **Professional CLI:** Packaged as a robust command-line tool (`linkedin-agent`).
+- **Interactive Setup:** A user-friendly `configure` command for easy first-time setup.
+- **Resilient & Robust:** Built with retry logic and headless browsing to handle real-world instability.
+
+### 🛠️ Tech Stack
+
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![Selenium](https://img.shields.io/badge/-selenium-%43B02A?style=for-the-badge&logo=selenium&logoColor=white) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)
+
+### 🚀 Getting Started
+
+Follow these steps to get the agent up and running on your local machine.
+
+#### 1. Prerequisites
+
+- [Python 3.9+](https://www.python.org/downloads/)
+- [PostgreSQL](https://www.postgresql.org/download/)
+- [Google Chrome](https://www.google.com/chrome/)
+
+#### 2. Installation
+
+First, clone the repository to your local machine:
 ```bash
 git clone <your-repository-url>
-cd <repository-directory>
+cd linkedin-ai-scraper
 ```
 
-**2. Install Dependencies:**
-It is recommended to use a Python virtual environment.
+Next, it is highly recommended to create and activate a virtual environment:
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+```
+
+Now, install the required dependencies and the agent's CLI package:
+```bash
+# Install all required libraries
 pip install -r requirements.txt
+
+# Install the CLI in editable mode
+pip install -e .
 ```
 
-**3. Set Up PostgreSQL:**
-- Ensure you have a PostgreSQL server running.
-- Create a database and a user. For this project, a database named `rubeng` and a user named `rubeng` were used.
-- Run the `create_tables.sql` script to set up the necessary tables (`job_schedules` and `validated_recruiters`).
+#### 3. Configuration
+
+This project uses a simple interactive command to set up your credentials securely. Run the following command:
+
 ```bash
-psql -U rubeng -d rubeng -f create_tables.sql
+linkedin-agent configure
 ```
 
-**4. Configure Environment Variables:**
-- Create a file named `.env` in the project root.
-- Add your LinkedIn credentials to this file:
-```
-LINKEDIN_USERNAME="your-linkedin-email@example.com"
-LINKEDIN_PASSWORD="your-linkedin-password"
-```
+The tool will prompt you for:
+- Your LinkedIn Email
+- Your LinkedIn Password
+- Your Database Connection Details
 
-**5. Set Up Google Cloud Credentials:**
-- Download your Google Cloud service account key and save it in the project root as `gcp-linkedin-agent-credentials.json`.
-- **Important:** The `.gitignore` file is already configured to prevent this key from being uploaded to GitHub.
+This will create a `.env` file in the root of the project, which the agent will use to run.
 
-**6. Download ChromeDriver:**
-- This project bypasses `webdriver-manager`. You must manually download the correct version of `chromedriver` for your Chrome browser and place the executable in the project root.
+### Usage
 
----
+Once the configuration is complete, you can run the agent with a single command:
 
-## How to Run the Agent
-
-Once all setup steps are complete, you can run the agent with a single command from your terminal.
-
-Make sure you have activated your virtual environment first:
 ```bash
-source venv/bin/activate
+linkedin-agent run
 ```
 
-Then, simply execute the run script:
-```bash
-./run.sh
-```
-
-The agent will then connect to the database, retrieve its mission, and begin the scrape-analyze-save workflow.
-
-
+The agent will start its process in the background (headless mode). You can monitor its progress in the terminal and see the results appear in your PostgreSQL database.

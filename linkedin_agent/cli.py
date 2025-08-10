@@ -1,6 +1,6 @@
 import click
 import os
-from .run_agent import main as run_agent_main
+from .run_agent import run_agent_with_parameters
 
 @click.group()
 def cli():
@@ -53,15 +53,12 @@ DB_NAME={db_name}
 
 
 @cli.command()
-@click.argument('job_name', default='linkedin_recruiter_search')
-def run(job_name):
-    """Runs the LinkedIn agent for a specific job."""
-    click.echo(f"INFO: Starting agent for job: {job_name}")
-    try:
-        run_agent_main(job_name)
-        click.echo(f"INFO: Agent finished job: {job_name}")
-    except Exception as e:
-        click.echo(f"ERROR: An error occurred during agent execution: {e}", err=True)
+@click.option('--query', required=True, help='The search query for LinkedIn profiles (e.g., "AI Engineer").')
+@click.option('--location', default='Worldwide', help='The geographical location for the search.')
+def run(query, location):
+    """Runs the LinkedIn agent with a specific search query and location."""
+    click.echo(f"Starting agent to search for '{query}' in '{location}'...")
+    run_agent_with_parameters(query, location)
 
 if __name__ == '__main__':
     cli()
