@@ -1,7 +1,7 @@
-# linkedin_module.py - A refactored, importable module for Selenium tasks
+# linkedin_agent/linkedin_module.py
 
-import time
 import os
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.common.by import By
@@ -22,8 +22,12 @@ def setup_driver():
         )
 
     print(f"Using chromedriver from: {chromedriver_path}")
+    
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    
+    # El navegador será VISIBLE para que puedas resolver cualquier CAPTCHA.
+    # options.add_argument('--headless') 
+    
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
@@ -36,108 +40,80 @@ def setup_driver():
     return driver
 
 def _login_to_linkedin(driver, username, password):
-    """(Private) Logs into LinkedIn with robust retry logic for navigation."""
-    login_url = 'https://www.linkedin.com/login'
-    
-    # --- Navigation with Retry Logic ---
-    navigation_successful = False
-    for attempt in range(3):
-        try:
-            print(f"Navigating to LinkedIn login page (Attempt {attempt + 1}/3)...")
-            driver.get(login_url)
-            
-            # Explicitly wait for a key element (the username field) to be present after navigation
-            print("DEBUG: Page navigation initiated. Waiting for page to be fully loaded...")
-            WebDriverWait(driver, 15).until(
-                EC.presence_of_element_located((By.ID, "username"))
-            )
-            print("DEBUG: Page loaded and key element is present.")
-            navigation_successful = True
-            break # If successful, exit the loop
-            
-        except TimeoutException:
-            print(f"Timeout loading login page on attempt {attempt + 1}. Retrying...")
-        except Exception as e:
-            print(f"An unexpected error occurred during navigation on attempt {attempt + 1}: {e}")
-
-    if not navigation_successful:
-        print("Failed to load login page after multiple attempts. Aborting login.")
-        return False
-
-    # --- Login Credentials Input ---
-    print("Page loaded and ready. Attempting to log in immediately...")
+    """Logs into LinkedIn."""
+    print("--- Attempting to log in to LinkedIn ---")
     try:
-        # Use atomic JavaScript calls to find and interact with elements in a single step.
-        driver.execute_script("document.getElementById('username').value = arguments[0];", username)
-        driver.execute_script("document.getElementById('password').value = arguments[0];", password)
-        driver.execute_script("document.querySelector('button[type=\"submit\"]').click();")
-
-        # Wait for a known element on the home page to confirm login
+        driver.get("https://www.linkedin.com/login")
+        
+        # Espera a que los campos de usuario y contraseña estén presentes
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "username")))
+        
+        # Introduce las credenciales
+        driver.find_element(By.ID, "username").send_keys(username)
+        driver.find_element(By.ID, "password").send_keys(password)
+        
+        # Haz clic en el botón de inicio de sesión
+        driver.find_element(By.XPATH, "//button[@type='submit']").click()
+        
+        # Espera a que la página de inicio cargue (un indicador es el icono de 'Mi Red')
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, "global-nav-typeahead"))
         )
-        print("Login successful!", flush=True)
+        print("--- Login successful! ---")
         return True
+    except TimeoutException:
+        print("CRITICAL: Login failed. Either credentials are wrong or a security check (CAPTCHA) is required.")
+        print("The browser window is open. Please check for any security challenges and solve them manually.")
+        # Mantén el navegador abierto por un tiempo para que el usuario pueda intervenir
+        time.sleep(60) 
+        return False
     except Exception as e:
-        print(f"An error occurred during login: {e}", flush=True)
-        driver.save_screenshot('linkedin_login_error.png')
+        print(f"An unexpected error occurred during login: {e}")
         return False
 
-def search_for_people(driver, search_query):
-    """Navigates to the search results page for a given query."""
-    print(f"\nSearching for people with query: '{search_query}'")
-    try:
-        encoded_query = quote_plus(search_query)
-        people_search_url = f"https://www.linkedin.com/search/results/people/?keywords={encoded_query}"
-        driver.get(people_search_url)
-        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'search-results-container')]")))
-        print("Successfully loaded 'People' filtered search results.")
-        return True
-    except Exception as e:
-        print(f"Could not navigate to search results page: {e}")
-        return False
+def search_for_people(driver, query, location="Worldwide"):
+    """Performs a search for people on LinkedIn."""
+    print(f"--- Searching for '{query}' in '{location}' ---")
+    encoded_query = quote_plus(query)
+    search_url = f"https://www.linkedin.com/search/results/people/?keywords={encoded_query}"
+    driver.get(search_url)
+    # Estrategia robusta: esperar a que el cuerpo de la página cargue y luego pausar.
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.TAG_NAME, "body"))
+    )
+    time.sleep(3) # Pausa extra para que el contenido dinámico cargue.
 
 def extract_urls_from_current_page(driver):
-    """Extracts all unique profile URLs from the currently visible search results page."""
-    print("Extracting profile URLs from current page...")
+    """Extracts all profile URLs from the current search results page."""
+    urls = []
     try:
-        # Scroll once to ensure all elements on the page are loaded
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
-
-        # The outer container for search results.
-        search_container = driver.find_element(By.XPATH, "//div[contains(@class, 'search-results-container')]")
-        # Find all list items directly within that container. This is more general and robust.
-        profile_elements = search_container.find_elements(By.XPATH, ".//li")
-        
-        urls = []
-        for elem in profile_elements:
-            try:
-                link_tag = elem.find_element(By.XPATH, ".//a[contains(@href, '/in/')]")
-                url = link_tag.get_attribute('href').split('?')[0]
-                if url not in urls:
-                    urls.append(url)
-            except NoSuchElementException:
-                continue
-        
-        print(f"Extracted {len(urls)} unique profile URLs from this page.")
-        return urls
+        # Estrategia robusta: buscar enlaces de perfil dentro de cualquier elemento de lista (li).
+        search_results = driver.find_elements(By.XPATH, "//li//a[contains(@href, '/in/')]")
+        for result in search_results:
+            url = result.get_attribute('href').split('?')[0]
+            if "/in/" in url and "/company/" not in url and "/school/" not in url and url not in urls:
+                urls.append(url)
     except Exception as e:
-        print(f"An unexpected error occurred during URL extraction: {e}")
-        driver.save_screenshot('linkedin_extraction_error.png')
-        return []
+        print(f"An error occurred while extracting URLs: {e}")
+    print(f"Found {len(urls)} profile URLs on the current page.")
+    return urls
 
 def click_next_page(driver):
-    """Clicks the 'Next' button on the search results page and returns False if it's the last page."""
+    """Clicks the 'Next' button to go to the next page of search results."""
     try:
+        # LinkedIn carga la paginación dinámicamente, así que primero hacemos scroll.
+        print("Scrolling to bottom of page to load pagination...")
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2) # Espera a que aparezca el botón
+
+        # Selector flexible para encontrar el botón 'Siguiente' en español o 'Next' en inglés.
         next_button = WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Next']"))
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(@aria-label, 'Siguiente') or contains(@aria-label, 'Next')]"))
         )
-        # Scroll to the button to ensure it's in view before clicking
         driver.execute_script("arguments[0].scrollIntoView(true);", next_button)
         time.sleep(1)
         next_button.click()
-        time.sleep(2)  # Wait for the next page to load
+        time.sleep(2)
         return True
     except (TimeoutException, NoSuchElementException):
         print("INFO: 'Next' button not found. Reached the last page of results.")
@@ -151,29 +127,12 @@ def scrape_full_profile_details(driver, profile_url):
     print(f"Scraping details from: {profile_url}")
     try:
         driver.get(profile_url)
-        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "//h1")))
+        # Estrategia robusta: esperar a que el cuerpo de la página cargue.
+        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         time.sleep(2)
-
-        name = driver.find_element(By.XPATH, "//h1").text
-        headline = driver.find_element(By.XPATH, "//div[contains(@class, 'text-body-medium')]").text
-        
-        about_text = ""
-        try:
-            about_section = driver.find_element(By.XPATH, "//section[.//h2[contains(text(), 'About')]]")
-            about_text = about_section.text
-        except NoSuchElementException:
-            pass
-
-        experience_text = ""
-        try:
-            experience_section = driver.find_element(By.ID, "experience")
-            experience_text = experience_section.text
-        except NoSuchElementException:
-            pass
-
-        full_details = f"Name: {name}\nHeadline: {headline}\n\n{about_text}\n\n{experience_text}"
-        return full_details.strip()
-
+        # Extrae todo el texto visible del perfil
+        profile_text = driver.find_element(By.TAG_NAME, "body").text
+        return profile_text
     except Exception as e:
-        print(f"Error scraping details for {profile_url}: {e}")
+        print(f"Could not scrape profile {profile_url}. Reason: {e}")
         return None

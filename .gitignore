@@ -1,37 +1,14 @@
-# Environment variables & Credentials
-.env
-gcp-linkedin-agent-credentials.json
-google_application
-
-# Binaries, Logs, & Temporary Files
-chromedriver
-chromedriver-mac-arm64/
-*.png
-*.log
-*.html
-*.csv
-*.save
-
-# Python cache & virtual environments
-__pycache__/
-*.pyc
-venv/
-env/
-
-# macOS specific
-.DS_Store
-
-# Test files & scripts
-test.txt
-test_*.py
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
-env/
 build/
-develop-eggs/
 dist/
 downloads/
 eggs/
@@ -46,15 +23,48 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
-venv/
-ENV/
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
 
-# IDE
+# Installer logs
+-pyinstall.log
+
+# Unit test / coverage reports
+.tox/
+.coverage
+.coverage.*
+.cache
+htmlcov/
+.pytest_cache/
+
+# Environments
+.env
+.venv
+venv/
+env/
+
+# IDEs
 .idea/
 .vscode/
-*.swp
-*.swo
 
-# Database
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Credentials & Sensitive Files
+*.env
+*.log
 *.db
+*.sqlite3
+gcp-linkedin-agent-credentials.json
+
+# Local artifacts
+linkedin_profiles.csv

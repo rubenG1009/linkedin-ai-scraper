@@ -179,8 +179,8 @@ def run_agent_with_parameters(query: str, location: str):
         logging.info("Login successful.")
 
         # 3. Initial Search
-        logging.info(f"Starting search for: '{query}'")
-        search_for_people(driver, search_query=query)
+        print(f"INFO:root:Starting search for: '{query}'")
+        search_for_people(driver, query=query, location=location)
 
         # 4. Paginate, Scrape, Analyze, and Save Profiles
         page_count = 1
@@ -206,18 +206,18 @@ def run_agent_with_parameters(query: str, location: str):
                 # Analyze with LLM
                 logging.info("Analyzing profile with AI...")
                 try:
-                    analysis = analyze_profile_with_langchain(profile_text, mission_critical_profile, examples)
-                    
-                # Save to database
-                    logging.info("Saving analysis to database...")
-                    save_recruiter_analysis(
-                        profile_url=url, 
-                        profile_text=profile_text, 
-                        analysis_data=analysis.dict(),
-                        mcp_data={}
-                    )
-                    logging.info(f"Successfully processed and saved profile: {url}")
-
+                    analysis_result = analyze_profile_with_langchain(profile_text, mission_critical_profile, examples)
+                    if analysis_result:
+                        logging.info("Saving analysis to database...")
+                        save_recruiter_analysis(
+                            profile_url=url, 
+                            profile_text=profile_text, 
+                            analysis_data=analysis_result.dict(),
+                            mcp_data=mission_critical_profile
+                        )
+                        logging.info(f"Successfully processed and saved profile: {url}")
+                    else:
+                        logging.error(f"AI analysis returned None for {url}. Skipping database save.")
                 except Exception as e:
                     logging.error(f"An error occurred during AI analysis or saving for {url}: {e}")
 

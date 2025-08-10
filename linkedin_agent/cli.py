@@ -24,6 +24,13 @@ def configure():
     # --- Gather Information ---
     linkedin_user = click.prompt("Enter your LinkedIn email", type=str)
     linkedin_pass = click.prompt("Enter your LinkedIn password", hide_input=True, confirmation_prompt=True)
+    
+    click.echo()
+    chromedriver_path = click.prompt("Enter the absolute path to your chromedriver executable")
+    
+    # --- Database Credentials ---
+    click.echo()
+    click.echo("--- Database Configuration ---")
     db_host = click.prompt("Enter your Database Host", default="localhost")
     db_user = click.prompt("Enter your Database User", default=os.getlogin())
     db_name = click.prompt("Enter your Database Name", default=os.getlogin())
@@ -35,6 +42,7 @@ def configure():
 # LinkedIn Credentials
 LINKEDIN_USERNAME="{linkedin_user}"
 LINKEDIN_PASSWORD="{linkedin_pass}"
+CHROMEDRIVER_PATH="{chromedriver_path}"
 
 # Database Configuration
 DB_HOST={db_host}

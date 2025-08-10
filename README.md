@@ -1,81 +1,92 @@
 # 🤖 LinkedIn AI-Powered Recruitment Agent
 
-**An autonomous agent that finds, analyzes, and scores potential recruitment candidates on LinkedIn using AI.**
+This project is an automated agent that scrapes LinkedIn for candidate profiles based on a search query, uses Google's Vertex AI to analyze their suitability for a role, and saves the results to a PostgreSQL database.
 
----
+## ✨ Key Features
 
-### Overview
+- **Automated LinkedIn Scraping**: Navigates LinkedIn, performs searches, and extracts profile data robustly.
+- **AI-Powered Analysis**: Leverages LangChain and Google Vertex AI to analyze profile text and score candidates against job requirements.
+- **CLI Interface**: Easy-to-use command-line interface to run the agent with custom queries.
+- **Database Storage**: Stores scraped data and AI analysis in a PostgreSQL database for persistence and further analysis.
+- **Robust & Resilient**: Built with error handling and modern web scraping techniques to handle dynamic web content.
 
-This project is a sophisticated, AI-driven software agent designed to automate the early stages of the recruitment pipeline. It intelligently searches LinkedIn for profiles matching a specific job query (e.g., "AI Recruiter in Spain"), scrapes the relevant profile data, uses Google's Vertex AI to analyze and score the profile's alignment with the role, and stores the validated candidates in a PostgreSQL database for review.
+## 🚀 Getting Started
 
-### ✨ Key Features
+### Prerequisites
 
-- **Autonomous Searching:** Runs automated, targeted searches on LinkedIn.
-- **Intelligent Scraping:** Extracts key information from public LinkedIn profiles.
-- **AI-Powered Analysis:** Leverages Google's Vertex AI for deep profile analysis and scoring.
-- **Data Persistence:** Stores validated and scored candidates in a PostgreSQL database.
-- **Professional CLI:** Packaged as a robust command-line tool (`linkedin-agent`).
-- **Interactive Setup:** A user-friendly `configure` command for easy first-time setup.
-- **Resilient & Robust:** Built with retry logic and headless browsing to handle real-world instability.
+- **Python 3.9+**
+- **PostgreSQL**: A running instance of PostgreSQL.
+- **Google Cloud SDK**: Required for AI analysis.
+- **Homebrew** (for macOS users): The easiest way to install dependencies.
 
-### 🛠️ Tech Stack
+### 1. Installation
 
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![Selenium](https://img.shields.io/badge/-selenium-%43B02A?style=for-the-badge&logo=selenium&logoColor=white) ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) ![Google Cloud](https://img.shields.io/badge/Google%20Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)
+1.  **Clone the repository:**
+    ```bash
+    git clone <your-repo-url>
+    cd <your-repo-name>
+    ```
 
-### 🚀 Getting Started
+2.  **Install Python dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-Follow these steps to get the agent up and running on your local machine.
+3.  **(macOS) Install Google Cloud SDK:**
+    ```bash
+    brew install --cask google-cloud-sdk
+    ```
 
-#### 1. Prerequisites
+4.  **Authenticate with Google Cloud:**
+    This will open a browser window for you to log in.
+    ```bash
+    gcloud auth application-default login
+    ```
 
-- [Python 3.9+](https://www.python.org/downloads/)
-- [PostgreSQL](https://www.postgresql.org/download/)
-- [Google Chrome](https://www.google.com/chrome/)
+### 2. Configuration
 
-#### 2. Installation
+1.  **Create a `.env` file** from the example:
+    ```bash
+    cp .env.example .env
+    ```
 
-First, clone the repository to your local machine:
-```bash
-git clone <your-repository-url>
-cd linkedin-ai-scraper
-```
+2.  **Edit the `.env` file** with your credentials:
+    - `LINKEDIN_USERNAME`: Your LinkedIn email.
+    - `LINKEDIN_PASSWORD`: Your LinkedIn password.
+    - `CHROMEDRIVER_PATH`: The absolute path to your `chromedriver` executable.
+    - `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME`: Your PostgreSQL connection details.
 
-Next, it is highly recommended to create and activate a virtual environment:
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
+3.  **Set up the database schema** by running the SQL script located in the `database/` folder:
+    ```sql
+    -- Connect to your PostgreSQL instance and run the content of:
+    -- database/create_tables.sql
+    ```
 
-Now, install the required dependencies and the agent's CLI package:
-```bash
-# Install all required libraries
-pip install -r requirements.txt
+### 3. Usage
 
-# Install the CLI in editable mode
-pip install -e .
-```
-
-#### 3. Configuration
-
-This project uses a simple interactive command to set up your credentials securely. Run the following command:
-
-```bash
-linkedin-agent configure
-```
-
-The tool will prompt you for:
-- Your LinkedIn Email
-- Your LinkedIn Password
-- Your Database Connection Details
-
-This will create a `.env` file in the root of the project, which the agent will use to run.
-
-### Usage
-
-Once the configuration is complete, you can run the agent with a single command:
+Run the agent from the command line with a search query. The `--location` argument is optional.
 
 ```bash
-linkedin-agent run
+python -m linkedin_agent.cli run --query "Python Developer" --location "Remote"
 ```
 
-The agent will start its process in the background (headless mode). You can monitor its progress in the terminal and see the results appear in your PostgreSQL database.
+The agent will start, log in to LinkedIn, perform the search, scrape profiles, analyze them, and save the results to your database.
+
+## 📂 Project Structure
+
+```
+.
+├── .env.example          # Example environment variables
+├── .gitignore            # Files to be ignored by Git
+├── README.md             # This file
+├── requirements.txt      # Python dependencies
+├── setup.py              # Project setup for packaging
+├── database/
+│   └── create_tables.sql # SQL script for database schema
+└── linkedin_agent/
+    ├── __init__.py
+    ├── cli.py            # Command-line interface logic (argparse)
+    ├── langchain_module.py # AI analysis functions
+    ├── linkedin_module.py  # Selenium-based scraping functions
+    ├── repository.py     # Database interaction functions
+    └── run_agent.py      # Main orchestration logic
