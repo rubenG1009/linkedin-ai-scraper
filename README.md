@@ -1,92 +1,131 @@
 # 🤖 LinkedIn AI-Powered Recruitment Agent
 
-This project is an automated agent that scrapes LinkedIn for candidate profiles based on a search query, uses Google's Vertex AI to analyze their suitability for a role, and saves the results to a PostgreSQL database.
+> Automate LinkedIn candidate sourcing with AI scoring — built with Python, LangChain, Google Vertex AI and PostgreSQL.
+
+An end-to-end recruitment automation agent that searches LinkedIn for candidate profiles, 
+uses Google's Vertex AI to score their fit for a role, and persists everything in a 
+PostgreSQL database — all from a single CLI command.
+
+Built as a real-world automation project combining web scraping, LLM-powered analysis 
+and relational database storage.
+
+---
 
 ## ✨ Key Features
 
-- **Automated LinkedIn Scraping**: Navigates LinkedIn, performs searches, and extracts profile data robustly.
-- **AI-Powered Analysis**: Leverages LangChain and Google Vertex AI to analyze profile text and score candidates against job requirements.
-- **CLI Interface**: Easy-to-use command-line interface to run the agent with custom queries.
-- **Database Storage**: Stores scraped data and AI analysis in a PostgreSQL database for persistence and further analysis.
-- **Robust & Resilient**: Built with error handling and modern web scraping techniques to handle dynamic web content.
+- **Automated LinkedIn Scraping** — Navigates LinkedIn, performs searches and extracts profile data using Selenium with robust error handling for dynamic content
+- **AI-Powered Candidate Scoring** — Uses LangChain + Google Vertex AI to analyze profile text and score each candidate against custom job requirements
+- **CLI Interface** — Run the full agent with a single command, passing custom queries and location filters
+- **PostgreSQL Storage** — Stores scraped data and AI analysis results for persistence and further querying
+- **Resilient by design** — Built with modern scraping techniques and error handling to handle LinkedIn's dynamic rendering
+
+---
+
+## 🏗️ Architecturegic
+
+CLI command
+↓
+linkedin_module.py   →   Selenium scrapes LinkedIn profiles
+↓
+langchain_module.py  →   Vertex AI scores candidate fit
+↓
+repository.py        →   Results saved to PostgreSQL
+
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- **Python 3.9+**
-- **PostgreSQL**: A running instance of PostgreSQL.
-- **Google Cloud SDK**: Required for AI analysis.
-- **Homebrew** (for macOS users): The easiest way to install dependencies.
+- Python 3.9+
+- PostgreSQL (running instance)
+- Google Cloud SDK (for Vertex AI)
+- ChromeDriver (matching your Chrome version)
 
-### 1. Installation
+### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <your-repo-url>
-    cd <your-repo-name>
-    ```
+```bash
+# 1. Clone the repo
+git clone https://github.com/rubenG1009/linkedin-ai-scraper.git
+cd linkedin-ai-scraper
 
-2.  **Install Python dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+# 2. Install dependencies
+pip install -r requirements.txt
 
-3.  **(macOS) Install Google Cloud SDK:**
-    ```bash
-    brew install --cask google-cloud-sdk
-    ```
+# 3. (macOS) Install Google Cloud SDK
+brew install --cask google-cloud-sdk
 
-4.  **Authenticate with Google Cloud:**
-    This will open a browser window for you to log in.
-    ```bash
-    gcloud auth application-default login
-    ```
+# 4. Authenticate with Google Cloud
+gcloud auth application-default login
+```
 
-### 2. Configuration
+### Configuration
 
-1.  **Create a `.env` file** from the example:
-    ```bash
-    cp .env.example .env
-    ```
+```bash
+# Copy the example env file
+cp .env.example .env
+```
 
-2.  **Edit the `.env` file** with your credentials:
-    - `LINKEDIN_USERNAME`: Your LinkedIn email.
-    - `LINKEDIN_PASSWORD`: Your LinkedIn password.
-    - `CHROMEDRIVER_PATH`: The absolute path to your `chromedriver` executable.
-    - `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME`: Your PostgreSQL connection details.
+Edit `.env` with your credentials:
 
-3.  **Set up the database schema** by running the SQL script located in the `database/` folder:
-    ```sql
-    -- Connect to your PostgreSQL instance and run the content of:
-    -- database/create_tables.sql
-    ```
+| Variable | Description |
+|---|---|
+| `LINKEDIN_USERNAME` | Your LinkedIn email |
+| `LINKEDIN_PASSWORD` | Your LinkedIn password |
+| `CHROMEDRIVER_PATH` | Absolute path to your chromedriver |
+| `DB_USER / DB_PASSWORD / DB_HOST / DB_PORT / DB_NAME` | PostgreSQL connection details |
 
-### 3. Usage
+```bash
+# Set up the database schema
+psql -U your_user -d your_db -f database/create_tables.sql
+```
 
-Run the agent from the command line with a search query. The `--location` argument is optional.
+---
+
+## 🖥️ Usage
 
 ```bash
 python -m linkedin_agent.cli run --query "Python Developer" --location "Remote"
 ```
 
-The agent will start, log in to LinkedIn, perform the search, scrape profiles, analyze them, and save the results to your database.
+The agent will log in to LinkedIn, run the search, scrape profiles, score them with AI and save results to your database.
+
+---
 
 ## 📂 Project Structure
 
-```
 .
-├── .env.example          # Example environment variables
-├── .gitignore            # Files to be ignored by Git
-├── README.md             # This file
-├── requirements.txt      # Python dependencies
-├── setup.py              # Project setup for packaging
+├── .env.example
+├── requirements.txt
 ├── database/
-│   └── create_tables.sql # SQL script for database schema
+│   └── create_tables.sql
 └── linkedin_agent/
-    ├── __init__.py
-    ├── cli.py            # Command-line interface logic (argparse)
-    ├── langchain_module.py # AI analysis functions
-    ├── linkedin_module.py  # Selenium-based scraping functions
-    ├── repository.py     # Database interaction functions
-    └── run_agent.py      # Main orchestration logic
+├── cli.py                # CLI entrypoint (argparse)
+├── linkedin_module.py    # Selenium scraping logic
+├── langchain_module.py   # Vertex AI / LangChain analysis
+├── repository.py         # PostgreSQL interactions
+└── run_agent.py          # Main orchestration
+
+---
+
+## 🛠️ Tech Stack
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-000000?style=flat-square&logo=langchain&logoColor=white)
+![Google Cloud](https://img.shields.io/badge/Vertex_AI-4285F4?style=flat-square&logo=googlecloud&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat-square&logo=postgresql&logoColor=white)
+![Selenium](https://img.shields.io/badge/Selenium-43B02A?style=flat-square&logo=selenium&logoColor=white)
+
+---
+
+## ⚠️ Disclaimer
+
+This project is built for educational and research purposes. 
+Use responsibly and in accordance with LinkedIn's Terms of Service.
+
+---
+
+## 👤 Author
+
+**Rubén García Revett** — [LinkedIn](https://www.linkedin.com/in/ruben-garcia-revett-b72312223/) · [GitHub](https://github.com/rubenG1009)
